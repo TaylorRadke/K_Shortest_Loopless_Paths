@@ -1,31 +1,58 @@
 import sys
 import math
 
-def dijkstra(graph, initial, destination):
-    dists = dict()
-    visited = set()
-    queue: int = [key for key in graph]
-    for key in graph:
-        if key == initial:
-            dists[key] = 0
-        else:
-            dists[key] = math.inf
+def dijkstra(graph, initial, dest):
+    dist = {}
+    prev = {}
+    queue = []
+
+    for v in graph:
+        queue.append(v)
+        dist[v] = math.inf
+        prev[v] = None
+    dist[initial] = 0
 
     while queue:
-        min_dist_node = min(filter(lambda x: x not in visited, queue))
-        queue.pop(queue.index(min_dist_node))
-        visited.add(min_dist_node)
-        for neighbour in graph[min_dist_node]:
-            alt = dists[min_dist_node] + graph[min_dist_node][neighbour]
-            if alt < dists[neighbour]:
-                dists[neighbour] = alt
-    return dists[destination]
+        u = min(queue, key = lambda x: dist[x])
+        queue.pop(queue.index(u))
 
-def k_shortest_paths(graph, initial, destination, k):
-    """
-    Find the K shortest loopless paths from the initial edge to destination edge
-    """
-    shortest_path = dijkstra(graph, initial, destination)
+        for v in filter(lambda x:x in queue, graph[u]):
+            alt = dist[u] + graph[u][v]
+            if alt < dist[v]:
+                dist[v] = alt
+                prev[v] = u
+    return dist, prev
+
+def shortest_path(prev, dest):
+    S = []
+    u = dest
+
+    if prev[u] or prev[u] == dest:
+        while u:
+            S.insert(0,u)
+            u = prev[u]
+    return S
+
+def k_shortest_paths(graph, initial, dest, K):
+    print(type(K))
+    dist, prev = dijkstra(graph, initial, dest)
+
+    A = shortest_path(prev, dest)
+    B = []
+
+    for _ in range(1, K):
+        for i in range(len(A)-2):
+            spur = A[i]
+            rootPath = A[0:i]
+
+            for p in A:
+                if rootPath == p[0:i]:
+                    graph.pop(p[i])
+            for rootPathNode in rootPath:
+                if rootPathNode != spur:
+                    graph.pop(rootPathNode)
+    
+
 
 def main(input_file):
     with open(input_file) as input:
@@ -43,10 +70,10 @@ def main(input_file):
             else:
                 edge_from, edge_to, vertex_weight = line
                 if edge_from not in graph:
-                    graph[edge_from] = {edge_to: int(vertex_weight)}
+                    graph[edge_from] = {edge_to: float(vertex_weight)}
                 else:
-                    graph[edge_from][edge_to] = int(vertex_weight)
-        a = k_shortest_paths(graph, initial, destination, k)
+                    graph[edge_from][edge_to] = float(vertex_weight)
+        k_shortest_paths(graph, initial, destination, int(k))
 
 if __name__ == "__main__":
     main(sys.argv[1])
