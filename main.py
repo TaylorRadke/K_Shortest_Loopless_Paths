@@ -21,7 +21,7 @@ def dijkstra(graph, initial, dest):
             if alt < dist[v]:
                 dist[v] = alt
                 prev[v] = u
-    return dist, prev
+    return dist[dest], shortest_path(prev, dest)
 
 def shortest_path(prev, dest):
     S = []
@@ -34,23 +34,16 @@ def shortest_path(prev, dest):
     return S
 
 def k_shortest_paths(graph, initial, dest, K):
-    print(type(K))
-    dist, prev = dijkstra(graph, initial, dest)
-
-    A = shortest_path(prev, dest)
+    dist, path = dijkstra(graph, initial, dest)
+    A = []
     B = []
+    A.append({"cost": dist, "path": path})
+    print(len(A[0]["path"]) - 2)
+    # for k in range(1, K):
+    #     for i in range(len(A[k-1]["path"]) - 2):
+    #         spurNode = A[k-1]["path"][i]
+    #         rootPath = A[k-1]["path"][0:i]
 
-    for _ in range(1, K):
-        for i in range(len(A)-2):
-            spur = A[i]
-            rootPath = A[0:i]
-
-            for p in A:
-                if rootPath == p[0:i]:
-                    graph.pop(p[i])
-            for rootPathNode in rootPath:
-                if rootPathNode != spur:
-                    graph.pop(rootPathNode)
     
 
 
