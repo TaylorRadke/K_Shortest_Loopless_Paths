@@ -8,7 +8,7 @@ def dijkstra(graph, initial, dest):
     dist = {}
     prev = {}
     queue = [(0, initial)]
-
+    
     while queue:
         path_cost, u = heappop(queue)
 
@@ -19,8 +19,8 @@ def dijkstra(graph, initial, dest):
                 if (v in prev and alt < dist[u]) or v not in prev:
                     prev[v] = u
                     heappush(queue, (alt, v))
+    return shortest_path(prev, initial, dest) if dest in prev else None
 
-    return dist[dest], shortest_path(prev, initial, dest)
 
 def shortest_path(prev, initial, dest):
     path = []
@@ -33,18 +33,25 @@ def shortest_path(prev, initial, dest):
             u = prev[u]
     return path
 
-def k_shortest_paths(graph, initial, dest, K):
-    dist, path = dijkstra(graph, initial, dest)
+def path_len(graph, path):
+    pl = 0
+    
+    for count, node in enumerate(path):
+        if node != path[-1]:
+            pl += graph[node][path[count + 1]]
+    return pl
 
-    dists = [dist]
+def k_shortest_paths(graph, initial, dest, K):
+    path = dijkstra(graph, initial, dest)
+
     A = [path]
     B = []
     
-    for k in range(1, 2):
+    for k in range(1, K):
         for i in range(len(A[k-1]) - 2):
-          
             nodes_removed = []
             vertex_removed = []
+
             spur_node = A[k-1][i]
             root_path = A[k-1][0:i]
         
@@ -58,20 +65,27 @@ def k_shortest_paths(graph, initial, dest, K):
                     nodes_removed.append((root_path_node, graph[root_path_node]))
                     graph.pop(root_path_node)
             
-            spur_dist, spur_path = dijkstra(graph, spur_node, dest)
-            print(spur_dist)
-            total_path = [item for item in root_path]
-            total_path.extend(spur_path)
-            
-            heappush(B, total_path)
+            spur_path = dijkstra(graph, spur_node, dest)
 
             for ver in vertex_removed:
                 graph[ver[0]][ver[1]] = ver[2]
 
             for node in nodes_removed:
                 graph[node[0]] = node[1]
-            
 
+            if spur_path:
+                total_path = [item for item in root_path]
+                total_path.extend(spur_path)
+                
+                total_path_len = path_len(graph, total_path)
+                heappush(B,(total_path_len, total_path))
+
+        if not B:
+            break
+        A.append(heappop(B))
+        
+    A[0] = (path_len(graph, A[0]), A[0])
+    return A
             
 
 
@@ -98,7 +112,8 @@ def main(input_file):
                 else:
                     graph[edge_from][edge_to] = float(vertex_weight)
 
-        k_shortest_paths(graph, initial, destination, int(k))
+        for path in k_shortest_paths(graph, initial, destination, int(k)):
+            print(path[0])
 
 if __name__ == "__main__":
     main(sys.argv[1])
